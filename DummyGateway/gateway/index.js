@@ -9,7 +9,18 @@ const routes  = {
     '/users': 'http://localhost:3002',
     '/orders': 'http://localhost:3001'
 }
-app.use(async (req, res) => {
+
+
+const loggerMiddleware = (req, res, next) => {
+    console.log("TimeStamp:", new Date().toLocaleString());
+    console.log("Method:", req.method);
+    console.log("URL:", req.originalUrl);
+    console.log("statuscode:", res.statusCode);
+    next();
+}
+
+
+app.use(loggerMiddleware,async (req, res) => {
     try{
       const service = req.path.split('/')[1];
       let targetUrl = routes['/'+service];
