@@ -36,23 +36,27 @@ app.use(async (req,res,next)=>{
 
 
 app.use(async(req,res,next)=>{
-    const route = routes.find(r=> req.path.startsWith(r.prefix));
-    const targetUrl = route.target + req.path;
-    const response = await fetch(targetUrl, {
-        method: req.method,
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': req.headers['authorization'] || '',
-            'x-user': req.user ? JSON.stringify(req.user) : ''
-        },
-        body: (req.method !== 'GET') ? JSON.stringify(req.body) : null,
-    });
-    if (!response.ok) {
-        const errorData = await response.json();
-        return res.status(response.status).json(errorData);
+    try{
+        const route = routes.find(r=> req.path.startsWith(r.prefix));
+        const targetUrl = route.target + req.originalUrl;
+        const response = await fetch(targetUrl, {
+            method: req.method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': req.headers['authorization'] || '',
+                'x-user': req.user ? JSON.stringify(req.user) : ''
+            },
+            body: (req.method !== 'GET') ? JSON.stringify(req.body) : null,
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            return res.status(response.status).json(errorData);
+        }
+        const data = await response.json();
+        return res.status(response.status).json(data);
+    }catch(error){
+        return res.status(503).json({"message":"service unavailable"});
     }
-    const data = await response.json();
-    return res.status(response.status).json(data);
 })
 
 

@@ -4,9 +4,9 @@ const LoggerMiddleware = (req,res,next)=>{
     console.log("TimeStamp:", req.startTime);
     console.log("Method:", req.method);
     console.log("URL:", req.originalUrl);
-    console.log("statuscode:", res.statusCode);
     res.on('finish', () => {
         console.log("Latency:", new Date().getTime() - req.startTime, "ms");
+        console.log("Response Status:", res.statusCode);
     })
     next();
 }
