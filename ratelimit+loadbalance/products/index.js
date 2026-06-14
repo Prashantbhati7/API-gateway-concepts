@@ -4,8 +4,12 @@ import products from './data.js';
 const app = express();
 app.use(express.json());
 
-const PORT = 3003;
+const PORT = process.env.PORT || 4001;
 
+app.use((req,res,next)=>{
+    console.log("req at product service at port ",PORT);
+    next();
+});
 
 app.get('/products',(req,res)=>{
     res.json({

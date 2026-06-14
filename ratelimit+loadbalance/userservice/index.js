@@ -7,9 +7,9 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const PORT = 3002;
+const PORT = process.env.PORT || 5001;
 
-const registeredUseres = {
+const registeredUsers = {
     'user1@gmail.com':'password1'
 }
 
@@ -23,7 +23,7 @@ app.post('/auth/login', (req, res) => {
         const { username, password } = req.body;
         // while (true){} // Simulate a long-running request to trigger timeout
 
-        if (registeredUseres[username] && registeredUseres[username] === password) {
+        if (registeredUsers[username] && registeredUsers[username] === password) {
             const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
             return res.status(200).json({message:"Login successful", token });
         }
@@ -41,12 +41,13 @@ app.post('/auth/register',(req,res)=>{
         return res.status(400).json({ error: 'User already exists' });
     }
     console.log("Registering user: ", username);
-    registeredUseres[username] = password;
-    console.log("Registered users = ", registeredUseres);
+    registeredUsers[username] = password;
+    console.log("Registered users = ", registeredUsers);
     const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
     console.log("token = ", token);
     return res.status(201).json({ message: 'User registered successfully', token });
 });
+
 
 app.listen(PORT, () => {
     console.log(`User service is running on port ${PORT}`);

@@ -13,6 +13,8 @@ import ApiError from './utils/apiError.js';
 import asyncHandler from './utils/asyncHandler.js';
 import configurations from './config.js';
 import rateLimiter from './middlewares/rateLimiter.js';
+import LoadBalancer from './utils/LoadBalaner.js';
+import { healthController } from './routes/health.js';
 
 app.use(loggerMiddleware);
 
@@ -21,27 +23,17 @@ app.use(asyncHandler( async (req,res,next)=>{
     if(!config){
         throw new ApiError(404,"Route not found");
     }
+
     req.routeConfig = config;
-   //return rateLimiter(config.ratelimit.max, config.ratelimit.windowMs,config.ratelimit.message);
    next();
 }));
 
-app.use(asyncHandler( async (req,res,next)=>{
-    const config = req.routeConfig;
-    if(config.ratelimit){
-        return rateLimiter(config.ratelimit.max, config.ratelimit.windowMs,config.ratelimit.message)(req,res,next);
-    }
-    next();
-}));
+
+app.use(rateLimiter);
 
 
-app.use(asyncHandler( async (req,res,next)=>{
-    const config = req.routeConfig;
-    if (config.auth){
-        return authMiddleware(req,res,next);
-    }
-    next();
-}));
+app.use(authMiddleware);
+
 
 app.use(asyncHandler( async(req,res,next)=>{
     const abortController = new AbortController();
@@ -49,7 +41,8 @@ app.use(asyncHandler( async(req,res,next)=>{
         abortController.abort();
     }, 5000);
     const route = req.routeConfig;
-    const targetUrl = route.target + req.originalUrl;
+    const targetIndex = LoadBalancer(route);
+    const targetUrl = route.target[targetIndex] + req.originalUrl;
 
     try{
         const forwardedHeaders  = {...req.headers};
@@ -95,8 +88,7 @@ app.use(asyncHandler( async(req,res,next)=>{
     }
 
     finally{
-        clearTimeout(timeoutId);
-        
+        clearTimeout(timeoutId); 
     }
     
 }));
@@ -111,6 +103,7 @@ app.use((err,req,res,next)=>{
       error: err.message || "Internal Server Error"
    });
 });
+
 
 
 app.listen(PORT, () => {
