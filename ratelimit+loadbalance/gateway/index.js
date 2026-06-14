@@ -14,7 +14,7 @@ import asyncHandler from './utils/asyncHandler.js';
 import configurations from './config.js';
 import rateLimiter from './middlewares/rateLimiter.js';
 import LoadBalancer from './utils/LoadBalaner.js';
-import { healthController } from './routes/health.js';
+
 
 app.use(loggerMiddleware);
 
